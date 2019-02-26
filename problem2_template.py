@@ -59,7 +59,8 @@ class MyTradingFunctions():
         # and set a frequency at which you want to update the model
 
         self.updateFrequency = 6
-        self.featureList = self.getCorrelatedFeatures()
+        self.correlatedFeatureList = self.getCorrelatedFeatures()
+        self.featureList = self.correlatedFeatureList
         self.__featureKeys = []
         self.predictionLogFile = open('predictions.csv', 'a')
         self.headerNotSet = True
@@ -92,7 +93,6 @@ class MyTradingFunctions():
     def getCorrelatedFeatures(self):
         ds = self.getDataParser()
         dataDict = ds.getAllInstrumentUpdatesDict()
-
         return ['Alpha_A1_1', 'Alpha_A1_2', 'Alpha_A1_3', 'Alpha_A1_4', 'Alpha_A1_5', 'Alpha_A1_6', 'Alpha_A1_7', 'Alpha_A1_8', 'Alpha_A1_9', 'Alpha_A1_10']
 
     def getInstrumentFeatureConfigDicts(self):
@@ -183,10 +183,10 @@ class MyTradingFunctions():
 
         X = np.nan_to_num(np.array(X))                                             # shape = featureKeys x timestamp x instrumentIds
         x_star = np.nan_to_num(np.array(x_star))                                       # shape = featureKeys x instrumentIds
-        
+
         # import pdb;pdb.set_trace()
         # Now looping over all stocks:
-        ids = self.instrumentIds 
+        ids = self.instrumentIds
         for i in range(len(ids)):
             s = ids[i]
             # if this is the first time we are training a model, start by creating a new model
@@ -211,9 +211,9 @@ class MyTradingFunctions():
                     x_train = np.array(X_train).T[:-1]                         # shape = timestamps x numFeatures
                     y_train = np.array(y_s)[1:].astype(float).reshape(-1)        # shape = timestamps x 1
                     self.model[s].fit(x_train, y_train)
-                    # print(self.model[s].score(x_train, y_train))
-                    # print(self.model[s].coef_)
-                    # print(self.model[s].intercept_) 
+                    print(self.model[s].score(x_train, y_train))
+                    print(self.model[s].coef_)
+                    print(self.model[s].intercept_)
                 except ValueError:
                     print('not fitting')
 
@@ -227,12 +227,12 @@ class MyTradingFunctions():
                 try:
                     y_predict = self.model[s].predict(x_star.reshape(1,-1))
 
-                except Exception as e: 
+                except Exception as e:
                     print(e)
                     y_predict = 0.5 if self.targetVariableType == 'b' else 0
 
             predictions[s] = y_predict
-            print('prediction for %s %s :%.3f'%(s, self.targetVariable, y_predict))
+            print('prediction for %s :%.3f'%(s, y_predict))
         self.logPredictions(time, predictions)
         return predictions
 
@@ -281,6 +281,9 @@ class MyTradingFunctions():
 
     def getFeatureList(self):
         return self.featureList
+
+    def getCorrelatedFeatureList(self):
+        return self.correlatedFeatureList
 
     def getTargetVariableType(self):
         return self.targetVariableType
